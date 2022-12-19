@@ -26,16 +26,6 @@ setup(
     author_email='api@evernote.com',
     url='http://dev.evernote.com',
     description='Evernote SDK for Python3',
-    #long_description=read_from_same_directory('README.md'),
-    packages=find_packages('lib'),
-    package_dir={'': 'lib'},
-    classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
-        'Topic :: Software Development :: Libraries',
-        'Programming Language :: Python :: 3'
-    ],
     license='BSD',
     install_requires=[
         'oauth2',
