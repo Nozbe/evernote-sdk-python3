@@ -1,8 +1,6 @@
 """ Setup """
 from setuptools import setup
 
-print("AAAAAAAAAA")
-
 setup(
     name="evernote3",
     version="0.1",
