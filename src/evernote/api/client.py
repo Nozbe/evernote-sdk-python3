@@ -18,20 +18,20 @@ import thrift.transport.THttpClient as THttpClient
 
 class EvernoteClient(object):
     def __init__(self, **options):
-        self.consumer_key = options.get('consumer_key')
-        self.consumer_secret = options.get('consumer_secret')
-        self.sandbox = options.get('sandbox', True)
-        self.china = options.get('china', False)
+        self.consumer_key = options.get("consumer_key")
+        self.consumer_secret = options.get("consumer_secret")
+        self.sandbox = options.get("sandbox", True)
+        self.china = options.get("china", False)
         if self.sandbox:
-            default_service_host = 'sandbox.evernote.com'
+            default_service_host = "sandbox.evernote.com"
         elif self.china:
-            default_service_host = 'app.yinxiang.com'
+            default_service_host = "app.yinxiang.com"
         else:
-            default_service_host = 'www.evernote.com'
-        self.service_host = options.get('service_host', default_service_host)
-        self.additional_headers = options.get('additional_headers', {})
-        self.token = options.get('token')
-        self.secret = options.get('secret')
+            default_service_host = "www.evernote.com"
+        self.service_host = options.get("service_host", default_service_host)
+        self.additional_headers = options.get("additional_headers", {})
+        self.token = options.get("token")
+        self.secret = options.get("secret")
 
     def _get_oauth_client(self, token=None):
         consumer = oauth.Consumer(self.consumer_key, self.consumer_secret)
@@ -42,39 +42,37 @@ class EvernoteClient(object):
         return client
 
     def get_request_token(self, callback_url):
-
         client = self._get_oauth_client()
-        request_url = '{}?oauth_callback={}'.format(
-            self._get_endpoint('oauth'), urllib.parse.quote(callback_url)
+        request_url = "{}?oauth_callback={}".format(
+            self._get_endpoint("oauth"), urllib.parse.quote(callback_url)
         )
 
-        resp, content = client.request(request_url, 'GET')
-        request_token = dict(urllib.parse.parse_qsl(content.decode('utf-8')))
+        resp, content = client.request(request_url, "GET")
+        request_token = dict(urllib.parse.parse_qsl(content.decode("utf-8")))
         return request_token
 
     def get_authorize_url(self, request_token):
-        return '{}?oauth_token={}'.format(
-            self._get_endpoint('OAuth.action'),
-            urllib.parse.quote(request_token['oauth_token'])
+        return "{}?oauth_token={}".format(
+            self._get_endpoint("OAuth.action"), urllib.parse.quote(request_token["oauth_token"])
         )
 
-    def get_access_token(self, oauth_token,
-                         oauth_token_secret, oauth_verifier, return_full_dict=False):
+    def get_access_token(
+        self, oauth_token, oauth_token_secret, oauth_verifier, return_full_dict=False
+    ):
         token = oauth.Token(oauth_token, oauth_token_secret)
         token.set_verifier(oauth_verifier)
         client = self._get_oauth_client(token)
 
-        resp, content = client.request(self._get_endpoint('oauth'), 'POST')
-        access_token_dict = dict(urllib.parse.parse_qsl(content.decode('utf-8')))
-        self.token = access_token_dict['oauth_token']
+        resp, content = client.request(self._get_endpoint("oauth"), "POST")
+        access_token_dict = dict(urllib.parse.parse_qsl(content.decode("utf-8")))
+        self.token = access_token_dict["oauth_token"]
 
         if return_full_dict:
             return access_token_dict
 
-        return access_token_dict['oauth_token']
+        return access_token_dict["oauth_token"]
 
-    def get_access_token_dict(self, oauth_token,
-                              oauth_token_secret, oauth_verifier):
+    def get_access_token_dict(self, oauth_token, oauth_token_secret, oauth_verifier):
         """
         Full dict looks like:
 
@@ -87,10 +85,12 @@ class EvernoteClient(object):
 
         Unit of expire time is millisecond.
         """
-        access_token_dict = self.get_access_token(oauth_token=oauth_token,
-                                                  oauth_token_secret=oauth_token_secret,
-                                                  oauth_verifier=oauth_verifier,
-                                                  return_full_dict=True)
+        access_token_dict = self.get_access_token(
+            oauth_token=oauth_token,
+            oauth_token_secret=oauth_token_secret,
+            oauth_verifier=oauth_verifier,
+            return_full_dict=True,
+        )
         return access_token_dict
 
     def get_user_store(self):
@@ -98,7 +98,7 @@ class EvernoteClient(object):
         store = Store(self.token, UserStore.Client, user_store_uri)
         if not store:  # Trick for PyDev code completion
             store = UserStore.Client()
-            raise Exception('Should never reach here')
+            raise Exception("Should never reach here")
         return store
 
     def get_note_store(self):
@@ -107,19 +107,18 @@ class EvernoteClient(object):
         store = Store(self.token, NoteStore.Client, note_store_uri)
         if not store:  # Trick for PyDev code completion
             store = NoteStore.Client()
-            raise Exception('Should never reach here')
+            raise Exception("Should never reach here")
         return store
 
     def get_shared_note_store(self, linkedNotebook):
         note_store_uri = linkedNotebook.noteStoreUrl
         note_store = Store(self.token, NoteStore.Client, note_store_uri)
-        shared_auth = note_store.authenticateToSharedNotebook(
-            linkedNotebook.shareKey)
+        shared_auth = note_store.authenticateToSharedNotebook(linkedNotebook.shareKey)
         shared_token = shared_auth.authenticationToken
         store = Store(shared_token, NoteStore.Client, note_store_uri)
         if not store:  # Trick for PyDev code completion
             store = NoteStore.Client()
-            raise Exception('Should never reach here')
+            raise Exception("Should never reach here")
         return store
 
     def get_business_note_store(self):
@@ -130,7 +129,7 @@ class EvernoteClient(object):
         store = Store(biz_token, NoteStore.Client, note_store_uri)
         if not store:  # Trick for PyDev code completion
             store = NoteStore.Client()
-            raise Exception('Should never reach here')
+            raise Exception("Should never reach here")
         return store
 
     def _get_endpoint(self, path=None):
@@ -143,11 +142,11 @@ class EvernoteClient(object):
 class Store(object):
     def __init__(self, token, client_class, store_url):
         self.token = token
-        m = re.search(':A=(.+):', token)
+        m = re.search(":A=(.+):", token)
         if m:
             self._user_agent_id = m.groups()[0]
         else:
-            self._user_agent_id = ''
+            self._user_agent_id = ""
         self._client = self._get_thrift_client(client_class, store_url)
 
     def __getattr__(self, name):
@@ -156,15 +155,15 @@ class Store(object):
             if targetMethod is None:
                 return object.__getattribute__(self, name)(*args, **kwargs)
 
-            org_args = inspect.getargspec(targetMethod).args
+            org_args = inspect.getfullargspec(targetMethod).args
             if len(org_args) == len(args) + 1:
                 return targetMethod(*args, **kwargs)
-            elif 'authenticationToken' in org_args:
-                skip_args = ['self', 'authenticationToken']
+            elif "authenticationToken" in org_args:
+                skip_args = ["self", "authenticationToken"]
                 arg_names = [i for i in org_args if i not in skip_args]
-                return functools.partial(
-                    targetMethod, authenticationToken=self.token
-                )(**dict(list(zip(arg_names, args))))
+                return functools.partial(targetMethod, authenticationToken=self.token)(
+                    **dict(list(zip(arg_names, args)))
+                )
             else:
                 return targetMethod(*args, **kwargs)
 
@@ -172,17 +171,18 @@ class Store(object):
 
     def _get_thrift_client(self, client_class, url):
         http_client = THttpClient.THttpClient(url)
-        http_client.setCustomHeaders({
-            'User-Agent': "%s / %s; Python / %s;"
-                          % (
-                self._user_agent_id, self._get_sdk_version(), sys.version.replace("\n", ""))
-        })
+        http_client.setCustomHeaders(
+            {
+                "User-Agent": "%s / %s; Python / %s;"
+                % (self._user_agent_id, self._get_sdk_version(), sys.version.replace("\n", ""))
+            }
+        )
 
         thrift_protocol = TBinaryProtocol.TBinaryProtocol(http_client)
         return client_class(thrift_protocol)
 
     def _get_sdk_version(self):
-        return '%s.%s' % (
+        return "%s.%s" % (
             UserStoreConstants.EDAM_VERSION_MAJOR,
-            UserStoreConstants.EDAM_VERSION_MINOR
+            UserStoreConstants.EDAM_VERSION_MINOR,
         )
