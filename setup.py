@@ -9,5 +9,5 @@ setup(
     url="http://dev.evernote.com",
     description="Evernote SDK for Python3",
     license="BSD",
-    install_requires=["oauth2", "oauthlib", "requests_oauthlib"],
+    install_requires=["requests_oauthlib"],
 )
