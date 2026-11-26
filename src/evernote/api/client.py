@@ -3,10 +3,9 @@ import functools
 import inspect
 import re
 
-import oauth2 as oauth
-import urllib.error
 import urllib.parse
-import urllib.request
+
+from requests_oauthlib import OAuth1Session
 
 import evernote.edam.userstore.UserStore as UserStore
 import evernote.edam.notestore.NoteStore as NoteStore
@@ -33,23 +32,12 @@ class EvernoteClient(object):
         self.token = options.get("token")
         self.secret = options.get("secret")
 
-    def _get_oauth_client(self, token=None):
-        consumer = oauth.Consumer(self.consumer_key, self.consumer_secret)
-        if token:
-            client = oauth.Client(consumer, token)
-        else:
-            client = oauth.Client(consumer)
-        return client
+    def _get_oauth_session(self, **kwargs):
+        return OAuth1Session(self.consumer_key, self.consumer_secret, **kwargs)
 
     def get_request_token(self, callback_url):
-        client = self._get_oauth_client()
-        request_url = "{}?oauth_callback={}".format(
-            self._get_endpoint("oauth"), urllib.parse.quote(callback_url)
-        )
-
-        resp, content = client.request(request_url, "GET")
-        request_token = dict(urllib.parse.parse_qsl(content.decode("utf-8")))
-        return request_token
+        session = self._get_oauth_session(callback_uri=callback_url)
+        return session.fetch_request_token(self._get_endpoint("oauth"))
 
     def get_authorize_url(self, request_token):
         return "{}?oauth_token={}".format(
@@ -59,12 +47,12 @@ class EvernoteClient(object):
     def get_access_token(
         self, oauth_token, oauth_token_secret, oauth_verifier, return_full_dict=False
     ):
-        token = oauth.Token(oauth_token, oauth_token_secret)
-        token.set_verifier(oauth_verifier)
-        client = self._get_oauth_client(token)
-
-        resp, content = client.request(self._get_endpoint("oauth"), "POST")
-        access_token_dict = dict(urllib.parse.parse_qsl(content.decode("utf-8")))
+        session = self._get_oauth_session(
+            resource_owner_key=oauth_token,
+            resource_owner_secret=oauth_token_secret,
+            verifier=oauth_verifier,
+        )
+        access_token_dict = session.fetch_access_token(self._get_endpoint("oauth"))
         self.token = access_token_dict["oauth_token"]
 
         if return_full_dict:
